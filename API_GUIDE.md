@@ -6,9 +6,9 @@ Tài liệu này cung cấp hướng dẫn đầy đủ, chi tiết và các đo
 
 ## 1. Thông tin kết nối (Base URL)
 
-- **Production API URL (VPS có SSL):** `https://api.hongngochuyenhoc.com`
-- **Tài liệu trực quan tương tác (Swagger UI):** `https://api.hongngochuyenhoc.com/docs`
-- **Tài liệu ReDoc:** `https://api.hongngochuyenhoc.com/redoc`
+- **Production API URL (VPS có SSL):** `https://api.yourdomain.com`
+- **Tài liệu trực quan tương tác (Swagger UI):** `https://api.yourdomain.com/docs`
+- **Tài liệu ReDoc:** `https://api.yourdomain.com/redoc`
 - **Môi trường Test Local (khi chạy máy tính):** `http://127.0.0.1:8000`
 
 > [!NOTE]
@@ -131,7 +131,7 @@ Mảng gồm đúng **12 phần tử** đại diện cho 12 cung từ Tý đến
 ### 4.1. JavaScript (Fetch API - Dùng cho React, Vue, Next.js, Web thuần)
 ```javascript
 async function getLaSoTuVi() {
-  const url = "https://api.hongngochuyenhoc.com/api/v1/laso";
+  const url = "https://api.yourdomain.com/api/v1/laso";
   
   const payload = {
     ho_ten: "Nguyễn Văn A",
@@ -179,7 +179,7 @@ getLaSoTuVi();
 
 ### 4.2. cURL (Dùng test nhanh trên Terminal hoặc Postman)
 ```bash
-curl -X POST "https://api.hongngochuyenhoc.com/api/v1/laso" \
+curl -X POST "https://api.yourdomain.com/api/v1/laso" \
      -H "Content-Type: application/json" \
      -d '{
        "ho_ten": "Trần Thị B",
@@ -199,7 +199,7 @@ curl -X POST "https://api.hongngochuyenhoc.com/api/v1/laso" \
 ```python
 import requests
 
-url = "https://api.hongngochuyenhoc.com/api/v1/laso"
+url = "https://api.yourdomain.com/api/v1/laso"
 
 payload = {
     "ho_ten": "Lê Văn C",
@@ -229,7 +229,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 Future<void> fetchLaSo() async {
-  final url = Uri.parse('https://api.hongngochuyenhoc.com/api/v1/laso');
+  final url = Uri.parse('https://api.yourdomain.com/api/v1/laso');
   
   final response = await http.post(
     url,

@@ -3,7 +3,7 @@
 Backend REST API phục vụ cho ứng dụng PWA xem lá số Tử Vi Đẩu Số, sử dụng FastAPI và Python, tích hợp engine an sao Tử Vi Đẩu Số thuần Việt (`lasotuvi`).
 
 > 🚀 **HƯỚNG DẪN TÍCH HỢP & MÃ MẪU GỌI API:** Xem chi tiết tại [**`API_GUIDE.md`**](API_GUIDE.md)  
-> 🌐 **Production API URL:** `https://api.hongngochuyenhoc.com` (Swagger UI: `https://api.hongngochuyenhoc.com/docs`)
+> 🌐 **Production API URL:** `https://api.yourdomain.com` (Swagger UI: `https://api.yourdomain.com/docs`)
 
 ---
 
@@ -204,7 +204,7 @@ pytest -v -s tests/test_api.py
 
 #### JavaScript / TypeScript (Web Frontend, React, Vue, Next.js):
 ```javascript
-const res = await fetch("https://api.hongngochuyenhoc.com/api/v1/laso", {
+const res = await fetch("https://api.yourdomain.com/api/v1/laso", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -225,7 +225,7 @@ console.log("12 Cung Địa Bàn:", data.dia_ban);
 
 #### cURL (Terminal / Postman):
 ```bash
-curl -X POST "https://api.hongngochuyenhoc.com/api/v1/laso" \
+curl -X POST "https://api.yourdomain.com/api/v1/laso" \
      -H "Content-Type: application/json" \
      -d '{
        "ho_ten": "Nguyễn Văn A",
@@ -243,7 +243,7 @@ curl -X POST "https://api.hongngochuyenhoc.com/api/v1/laso" \
 ```python
 import requests
 
-res = requests.post("https://api.hongngochuyenhoc.com/api/v1/laso", json={
+res = requests.post("https://api.yourdomain.com/api/v1/laso", json={
     "ho_ten": "Nguyễn Văn A",
     "ngay_sinh": 15,
     "thang_sinh": 8,
