@@ -240,35 +240,39 @@ Trong chiêm tinh học phương Đông, một ngày gồm 12 canh giờ (Địa
 
 [Dockge](https://dockge.kuma.pet/) là trình quản lý Docker Compose trực quan, hiện đại, rất phù hợp để quản trị stack backend Tử Vi trên VPS Linux.
 
-### 6.1. Chuẩn bị Stack trên VPS
+### 6.1. Cơ chế Dockge nhận diện Stack
+- **Thư mục Stacks:** Khi cài đặt Dockge, bạn đã cấu hình thư mục lưu trữ stacks (mặc định là `/opt/stacks`).
+- **Quy tắc nhận diện:** Dockge định kỳ quét toàn bộ thư mục con cấp 1 trong thư mục stacks. Mỗi thư mục con chứa file `compose.yaml` (hoặc `docker-compose.yaml`) và `.env` sẽ được Dockge tự động nhận diện thành một **Stack** độc lập. Tên thư mục chính là tên Stack.
+- **Yêu cầu khi build từ mã nguồn (`build: context: .`):** Do `compose.yaml` build trực tiếp từ `Dockerfile` nội bộ, toàn bộ thư mục mã nguồn (`Dockerfile`, `lasotuvi/`, `api/`, `main.py`, `requirements.txt`) phải hiện diện trong thư mục stack.
 
-#### Cách 1: Clone repo vào thư mục stack của Dockge (Khuyên dùng)
-Trên terminal của VPS:
+### 6.2. Quy trình chuẩn bị Stack trên VPS
+
+#### Bước 1: Clone repo vào thư mục stacks của Dockge trên VPS
+Đăng nhập SSH vào VPS và chuyển tới thư mục stacks mà Dockge quản lý (ví dụ `/opt/stacks`):
 ```bash
 cd /opt/stacks
 git clone https://github.com/dangtrandang/tuvidmt.git tuvidmt
 cd tuvidmt
 cp .env.example .env
 ```
-Mở giao diện Dockge trên trình duyệt, stack `tuvidmt` sẽ tự động xuất hiện.
 
-#### Cách 2: Tạo Stack trực tiếp trên giao diện Web của Dockge
-1. Bấm **"Compose"** (Tạo stack mới).
-2. Tên Stack: `tuvidmt`.
-3. Dán nội dung file `compose.yaml` vào khung soạn thảo bên trái.
-4. Trong khung biến môi trường `.env` bên phải, cấu hình:
-   ```env
-   HOST_PORT=127.0.0.1:8000
-   TAG=latest
-   ```
+#### Bước 2: Kiểm tra nhận diện trên giao diện Dockge
+1. Mở giao diện web của Dockge (`http://<ip-vps>:5001`).
+2. Stack **`tuvidmt`** sẽ tự động xuất hiện trong danh sách ngăn xếp (nếu chưa thấy, nhấn nút làm mới hoặc tải lại trang).
+3. Trong giao diện stack `tuvidmt`, bạn có thể xem trực quan cấu hình `compose.yaml` và các biến trong `.env`.
 
-### 6.2. Cấu hình bảo mật mạng
-- **Nguyên tắc an toàn:** Không mở cổng `8000` trực tiếp ra Internet trên Firewall (UFW).
-- Cấu hình `HOST_PORT=127.0.0.1:8000` giúp container chỉ lắng nghe nội bộ trên localhost của VPS.
-- Sử dụng Reverse Proxy (như Nginx, Caddy, Nginx Proxy Manager) hoặc Cloudflare Tunnel để cấp phát SSL/HTTPS và trỏ domain `api.yourdomain.com` vào `http://127.0.0.1:8000`.
+### 6.3. Cấu hình bảo mật mạng với `HOST_PORT`
+Trong file `.env`, giá trị mặc định được thiết lập:
+```env
+HOST_PORT=127.0.0.1:8000
+TAG=latest
+```
+- **Cơ chế hoạt động:** Trong `compose.yaml`, khai báo `"${HOST_PORT:-8000}:8000"` khi nhận `HOST_PORT=127.0.0.1:8000` sẽ được Docker Compose phân giải thành `127.0.0.1:8000:8000`.
+- **Lợi ích an toàn:** Container chỉ lắng nghe duy nhất trên giao diện loopback nội bộ của VPS (`127.0.0.1`), **tuyệt đối không mở cổng 8000 ra Internet**.
+- **Kết nối Domain / SSL:** Sử dụng Reverse Proxy (Nginx, Caddy, Nginx Proxy Manager) hoặc Cloudflare Tunnel trên VPS để trỏ tên miền (ví dụ: `https://api.tuvi.yourdomain.com`) chuyển tiếp vào `http://127.0.0.1:8000`.
 
-### 6.3. Khởi động và kiểm tra trên Dockge
-1. Bấm nút **"Deploy"** (hoặc **"Compose Up"**). Dockge sẽ build image từ Dockerfile và khởi chạy container.
+### 6.4. Khởi động và kiểm tra trên Dockge
+1. Bấm nút **"Deploy"** (hoặc **"Compose Up"**). Dockge sẽ build image từ Dockerfile và khởi chạy container `tuvi-backend`.
 2. Kiểm tra trạng thái: Container `tuvi-backend` sẽ hiển thị badge màu xanh lá **`healthy`**.
 3. Xem log: Nhấp vào container trong giao diện Dockge để theo dõi access log của Uvicorn thời gian thực.
 4. Kiểm tra sức khỏe từ terminal VPS:
@@ -276,10 +280,10 @@ Mở giao diện Dockge trên trình duyệt, stack `tuvidmt` sẽ tự động 
    curl http://127.0.0.1:8000/api/v1/health
    ```
 
-### 6.4. Cập nhật phiên bản và Rollback (Khôi phục)
+### 6.5. Cập nhật phiên bản và Rollback (Khôi phục)
 - **Cập nhật lên bản mới (Update):**
-  - Khi có commit mới trên GitHub: Vào thư mục `/opt/stacks/tuvidmt` chạy `git pull` hoặc bấm nút **"Update"** / **"Build"** trên Dockge, sau đó bấm **"Deploy"** lại.
+  - Khi có commit mới trên GitHub: Vào thư mục `/opt/stacks/tuvidmt` chạy `git pull` rồi bấm nút **"Update"** / **"Build"** trên Dockge, sau đó bấm **"Deploy"**.
 - **Khôi phục bản cũ (Rollback):**
   - Nếu cần quay về commit cũ: `git checkout <commit_hash>` và bấm **"Deploy"**.
-  - Nếu sử dụng tag image: Đổi biến `TAG=<phien_ban_truoc>` trong khung `.env` của Dockge và bấm **"Deploy"**.
+  - Nếu sử dụng image tag: Đổi biến `TAG=<phien_ban_truoc>` trong khung `.env` của Dockge và bấm **"Deploy"**.
 
