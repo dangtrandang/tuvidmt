@@ -200,7 +200,82 @@ pytest -v -s tests/test_api.py
 
 ---
 
+### 3.3. Mã mẫu gọi nhanh (Quickstart Snippets)
+
+#### JavaScript / TypeScript (Web Frontend, React, Vue, Next.js):
+```javascript
+const res = await fetch("https://api.hongngochuyenhoc.com/api/v1/laso", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    ho_ten: "Nguyễn Văn A",
+    ngay_sinh: 15,
+    thang_sinh: 8,
+    nam_sinh: 1990,
+    gio_sinh: 11,
+    phut_sinh: 30,
+    gioi_tinh: 1,      // 1: Nam, -1: Nữ
+    duong_lich: true    // true: Dương lịch, false: Âm lịch
+  })
+});
+const data = await res.json();
+console.log("Thiên Bàn:", data.thien_ban);
+console.log("12 Cung Địa Bàn:", data.dia_ban);
+```
+
+#### cURL (Terminal / Postman):
+```bash
+curl -X POST "https://api.hongngochuyenhoc.com/api/v1/laso" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "ho_ten": "Nguyễn Văn A",
+       "ngay_sinh": 15,
+       "thang_sinh": 8,
+       "nam_sinh": 1990,
+       "gio_sinh": 11,
+       "phut_sinh": 30,
+       "gioi_tinh": 1,
+       "duong_lich": true
+     }'
+```
+
+#### Python:
+```python
+import requests
+
+res = requests.post("https://api.hongngochuyenhoc.com/api/v1/laso", json={
+    "ho_ten": "Nguyễn Văn A",
+    "ngay_sinh": 15,
+    "thang_sinh": 8,
+    "nam_sinh": 1990,
+    "gio_sinh": 11,
+    "phut_sinh": 30,
+    "gioi_tinh": 1,
+    "duong_lich": True
+})
+data = res.json()
+print("Bản Mệnh:", data["thien_ban"]["ban_menh"])
+```
+
+---
+
+### 3.4. Ý nghĩa các trường dữ liệu quan trọng trong Output
+
+| Trường | Vị trí | Ý nghĩa cho việc vẽ giao diện |
+| :--- | :--- | :--- |
+| `thien_ban.ban_menh` | Thiên Bàn | Tên ngũ hành nạp âm bản mệnh (ví dụ: `LỘ BÀN THỔ`) |
+| `thien_ban.ten_cuc` | Thiên Bàn | Tên Cục (ví dụ: `Hỏa lục Cục`, `Thủy nhị Cục`...) |
+| `dia_ban[].cung_chu` | Mỗi Cung | Tên cung chức (Mệnh, Phụ Mẫu, Phúc Đức, Điền Trạch, Quan Lộc...) |
+| `dia_ban[].is_than` | Mỗi Cung | `true` nếu cung này là nơi **Thân cư** (ví dụ Thân cư Phu thê) |
+| `dia_ban[].tuan` | Mỗi Cung | `true` nếu cung bị ảnh hưởng bởi sao **Tuần Không** |
+| `dia_ban[].triet` | Mỗi Cung | `true` nếu cung bị ảnh hưởng bởi sao **Triệt Lộ** |
+| `dia_ban[].sao[].dac_tinh` | Mỗi Sao | Độ đắc hãm: `M` (Miếu), `V` (Vượng), `Đ` (Đắc), `B` (Bình), `H` (Hãm) |
+| `dia_ban[].sao[].css_sao` | Mỗi Sao | Class màu ngũ hành: `hanhKim`, `hanhMoc`, `hanhThuy`, `hanhHoa`, `hanhTho` |
+
+---
+
 ## 4. Quy ước chuyển đổi giờ sinh và ranh giới giờ Tý
+
 
 Trong chiêm tinh học phương Đông, một ngày gồm 12 canh giờ (Địa Chi), mỗi canh giờ tương ứng 2 tiếng đồng hồ.
 
