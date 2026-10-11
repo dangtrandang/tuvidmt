@@ -2,6 +2,9 @@
 
 Backend REST API phục vụ cho ứng dụng PWA xem lá số Tử Vi Đẩu Số, sử dụng FastAPI và Python, tích hợp engine an sao Tử Vi Đẩu Số thuần Việt (`lasotuvi`).
 
+> 🚀 **HƯỚNG DẪN TÍCH HỢP & MÃ MẪU GỌI API:** Xem chi tiết tại [**`API_GUIDE.md`**](API_GUIDE.md)  
+> 🌐 **Production API URL:** `https://api.hongngochuyenhoc.com` (Swagger UI: `https://api.hongngochuyenhoc.com/docs`)
+
 ---
 
 ## 1. Cấu trúc thư mục
