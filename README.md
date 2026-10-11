@@ -238,52 +238,80 @@ Trong chiêm tinh học phương Đông, một ngày gồm 12 canh giờ (Địa
 
 ## 6. Hướng dẫn triển khai VPS qua Dockge
 
-[Dockge](https://dockge.kuma.pet/) là trình quản lý Docker Compose trực quan, hiện đại, rất phù hợp để quản trị stack backend Tử Vi trên VPS Linux.
+[Dockge](https://dockge.kuma.pet/) là trình quản lý Docker Compose trực quan, hiện đại, rất phù hợp để quản trị stack backend Tử Vi trên VPS Linux. Dự án hỗ trợ 2 phương pháp triển khai:
 
-### 6.1. Cơ chế Dockge nhận diện Stack
-- **Thư mục Stacks:** Khi cài đặt Dockge, bạn đã cấu hình thư mục lưu trữ stacks (mặc định là `/opt/stacks`).
-- **Quy tắc nhận diện:** Dockge định kỳ quét toàn bộ thư mục con cấp 1 trong thư mục stacks. Mỗi thư mục con chứa file `compose.yaml` (hoặc `docker-compose.yaml`) và `.env` sẽ được Dockge tự động nhận diện thành một **Stack** độc lập. Tên thư mục chính là tên Stack.
-- **Yêu cầu khi build từ mã nguồn (`build: context: .`):** Do `compose.yaml` build trực tiếp từ `Dockerfile` nội bộ, toàn bộ thư mục mã nguồn (`Dockerfile`, `lasotuvi/`, `api/`, `main.py`, `requirements.txt`) phải hiện diện trong thư mục stack.
+---
 
-### 6.2. Quy trình chuẩn bị Stack trên VPS
+### Phương pháp 1 (Khuyên dùng): Triển khai qua Image đóng gói sẵn trên GHCR
+*(Không cần SSH vào VPS, không cần clone repo, không tiêu tốn RAM/CPU của VPS để build)*
 
-#### Bước 1: Clone repo vào thư mục stacks của Dockge trên VPS
-Đăng nhập SSH vào VPS và chuyển tới thư mục stacks mà Dockge quản lý (ví dụ `/opt/stacks`):
-```bash
-cd /opt/stacks
-git clone https://github.com/dangtrandang/tuvidmt.git tuvidmt
-cd tuvidmt
-cp .env.example .env
-```
+Image được tự động build và push lên GitHub Container Registry (`ghcr.io/dangtrandang/tuvidmt`) qua GitHub Actions mỗi khi có commit trên nhánh `master`.
 
-#### Bước 2: Kiểm tra nhận diện trên giao diện Dockge
+#### Các bước thực hiện trên Web UI của Dockge:
 1. Mở giao diện web của Dockge (`http://<ip-vps>:5001`).
-2. Stack **`tuvidmt`** sẽ tự động xuất hiện trong danh sách ngăn xếp (nếu chưa thấy, nhấn nút làm mới hoặc tải lại trang).
-3. Trong giao diện stack `tuvidmt`, bạn có thể xem trực quan cấu hình `compose.yaml` và các biến trong `.env`.
-
-### 6.3. Cấu hình bảo mật mạng với `HOST_PORT`
-Trong file `.env`, giá trị mặc định được thiết lập:
-```env
-HOST_PORT=127.0.0.1:8000
-TAG=latest
-```
-- **Cơ chế hoạt động:** Trong `compose.yaml`, khai báo `"${HOST_PORT:-8000}:8000"` khi nhận `HOST_PORT=127.0.0.1:8000` sẽ được Docker Compose phân giải thành `127.0.0.1:8000:8000`.
-- **Lợi ích an toàn:** Container chỉ lắng nghe duy nhất trên giao diện loopback nội bộ của VPS (`127.0.0.1`), **tuyệt đối không mở cổng 8000 ra Internet**.
-- **Kết nối Domain / SSL:** Sử dụng Reverse Proxy (Nginx, Caddy, Nginx Proxy Manager) hoặc Cloudflare Tunnel trên VPS để trỏ tên miền (ví dụ: `https://api.tuvi.yourdomain.com`) chuyển tiếp vào `http://127.0.0.1:8000`.
-
-### 6.4. Khởi động và kiểm tra trên Dockge
-1. Bấm nút **"Deploy"** (hoặc **"Compose Up"**). Dockge sẽ build image từ Dockerfile và khởi chạy container `tuvi-backend`.
-2. Kiểm tra trạng thái: Container `tuvi-backend` sẽ hiển thị badge màu xanh lá **`healthy`**.
-3. Xem log: Nhấp vào container trong giao diện Dockge để theo dõi access log của Uvicorn thời gian thực.
-4. Kiểm tra sức khỏe từ terminal VPS:
-   ```bash
-   curl http://127.0.0.1:8000/api/v1/health
+2. Bấm nút **"Compose"** (Tạo Stack mới).
+3. Đặt **Stack Name**: `tuvidmt`.
+4. Dán nội dung file [`dockge-compose.yaml`](dockge-compose.yaml) vào khung soạn thảo Compose bên trái:
+   ```yaml
+   services:
+     backend:
+       image: ghcr.io/dangtrandang/tuvidmt:${TAG:-latest}
+       container_name: tuvi-backend
+       restart: unless-stopped
+       ports:
+         - "${HOST_PORT:-127.0.0.1:8000}:8000"
+       environment:
+         - PORT=8000
+       healthcheck:
+         test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"]
+         interval: 15s
+         timeout: 5s
+         retries: 3
+         start_period: 5s
    ```
+5. Trong khung biến môi trường **.env** bên phải, cấu hình:
+   ```env
+   HOST_PORT=127.0.0.1:8000
+   TAG=latest
+   ```
+6. Bấm nút **"Deploy"**. Dockge sẽ tự động pull image từ GHCR và khởi chạy container trong vài giây.
 
-### 6.5. Cập nhật phiên bản và Rollback (Khôi phục)
-- **Cập nhật lên bản mới (Update):**
-  - Khi có commit mới trên GitHub: Vào thư mục `/opt/stacks/tuvidmt` chạy `git pull` rồi bấm nút **"Update"** / **"Build"** trên Dockge, sau đó bấm **"Deploy"**.
-- **Khôi phục bản cũ (Rollback):**
-  - Nếu cần quay về commit cũ: `git checkout <commit_hash>` và bấm **"Deploy"**.
-  - Nếu sử dụng image tag: Đổi biến `TAG=<phien_ban_truoc>` trong khung `.env` của Dockge và bấm **"Deploy"**.
+> [!NOTE]
+> **Quyền truy cập GHCR Package:**
+> - Mặc định khi GitHub Actions publish package lần đầu, package có thể ở chế độ *Private*.
+> - Để Dockge pull image mà không cần xác thực: Vào repo GitHub -> **Packages** -> chọn `tuvidmt` -> **Package settings** -> cuộn xuống **Danger Zone** và chuyển sang **Public**.
+> - Nếu muốn giữ Private: SSH vào VPS chạy `docker login ghcr.io -u <github-username> -p <personal-access-token>` một lần duy nhất.
+
+---
+
+### Phương pháp 2: Build trực tiếp từ mã nguồn trên VPS
+
+Dành cho trường hợp bạn muốn clone mã nguồn và tự build trên VPS.
+
+1. Đăng nhập SSH vào VPS và chuyển tới thư mục stacks của Dockge (ví dụ `/opt/stacks`):
+   ```bash
+   cd /opt/stacks
+   git clone https://github.com/dangtrandang/tuvidmt.git tuvidmt
+   cd tuvidmt
+   cp .env.example .env
+   ```
+2. Mở giao diện Dockge, stack `tuvidmt` sẽ tự động hiển thị trong danh sách.
+3. Bấm **"Deploy"** để Dockge tiến hành build và chạy container.
+
+---
+
+### 6.2. Cấu hình bảo mật mạng với `HOST_PORT`
+- **Cơ chế hoạt động:** Cấu hình `HOST_PORT=127.0.0.1:8000` ánh xạ container vào `127.0.0.1:8000:8000`.
+- **Lợi ích an toàn:** Container chỉ lắng nghe duy nhất trên giao diện loopback nội bộ của VPS (`127.0.0.1`), **tuyệt đối không mở cổng 8000 ra Internet**.
+- **Kết nối Domain / SSL:** Sử dụng Reverse Proxy (Nginx, Caddy, Nginx Proxy Manager) hoặc Cloudflare Tunnel trên VPS để trỏ tên miền (ví dụ: `https://api.tuvi.yourdomain.com`) chuyển tiếp an toàn vào `http://127.0.0.1:8000`.
+
+### 6.3. Kiểm tra sức khỏe và Rollback
+- **Kiểm tra trạng thái:** Container `tuvi-backend` hiển thị badge màu xanh lá **`healthy`**.
+- **Kiểm tra từ terminal VPS:**
+  ```bash
+  curl http://127.0.0.1:8000/api/v1/health
+  ```
+- **Cập nhật phiên bản:** Khi có bản cập nhật mới trên GitHub, trong giao diện Dockge chỉ cần bấm **"Update"** (hoặc pull tag mới) rồi bấm **"Deploy"**.
+- **Rollback:** Đổi biến `TAG=<commit_sha>` trong khung `.env` của Dockge (ví dụ `TAG=sha-9f3d76a`) và bấm **"Deploy"** để quay về phiên bản mong muốn.
+
 

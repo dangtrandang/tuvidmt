@@ -23,5 +23,9 @@ USER appuser
 # Expose cổng 8000
 EXPOSE 8000
 
+# Healthcheck tích hợp sẵn trong Image
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')" || exit 1
+
 # Khởi chạy Uvicorn bind 0.0.0.0
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
