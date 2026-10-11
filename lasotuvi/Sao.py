@@ -89,6 +89,10 @@ saoThaiTue = Sao(15, "Thái tuế", "H", 15, "", 0)
 saoThieuDuong = Sao(16, "Thiếu dương", "H", 5)
 saoTangMon = Sao(17, "Tang môn", "M", 12)
 saoThieuAm = Sao(18, "Thiếu âm", "T", 5)
+# [TLCT 2026-07-03] Vòng Thái Tuế = Quan PHÙ (giữ tên gốc). 4 golden charts
+# xem-tuvi.com xác nhận: Thái Tuế ring -> "Quan phù", Lộc Tồn ring -> "Quan
+# phủ" (ID 38, đổi bên dưới). LƯU Ý: references skill tuvi-doc-la-so
+# (bang-an-sao.md dòng ~318) ghi NGƯỢC — cần báo anh Sơn sửa skill gốc.
 saoQuanPhu3 = Sao(19, "Quan phù", "H", 12)
 saoTuPhu = Sao(20, "Tử phù", "K", 12)
 saoTuePha = Sao(21, "Tuế phá", "H", 12)
@@ -111,7 +115,8 @@ saoHyThan = Sao(34, "Hỷ thần", "H", 5)
 saoBenhPhu = Sao(35, "Bệnh phù", "O", 12)
 saoDaiHao = Sao(36, "Đại hao", "H", 12)
 saoPhucBinh = Sao(37, "Phục binh", "H", 13)
-saoQuanPhu2 = Sao(38, "Quan phù", "H", 12)
+# [TLCT 2026-07-03] Vòng Lộc Tồn = Quan PHỦ (xem chú thích ID 19).
+saoQuanPhu2 = Sao(38, "Quan phủ", "H", 12)
 
 # Vòng Tràng sinh
 saoTrangSinh = Sao(39, "Tràng sinh", "T", 5, vongTrangSinh=1)

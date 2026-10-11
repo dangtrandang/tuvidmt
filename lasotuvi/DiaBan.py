@@ -3,6 +3,7 @@
 (c) 2016 doanguyen <dungnv2410@gmail.com>.
 """
 
+import copy
 from lasotuvi.AmDuong import diaChi, dichCung, khoangCachCung
 
 
@@ -20,8 +21,11 @@ class cungDiaBan(object):
         self.cungThan = False
 
     def themSao(self, sao):
-        dacTinhSao(self.cungSo, sao)
-        self.cungSao.append(sao.__dict__)
+        # [TLCT 2026-10-11] Tạo bản sao độc lập của sao để tránh nhiễm chéo
+        # thuộc tính saoDacTinh giữa các lần lập lá số trong cùng process.
+        sao_copy = copy.copy(sao)
+        dacTinhSao(self.cungSo, sao_copy)
+        self.cungSao.append(sao_copy.__dict__)
         return self
 
     def cungChu(self, tenCungChu):
@@ -210,6 +214,13 @@ def dacTinhSao(viTriDiaBan, sao):
             "H", "H"],
         6: ["Thiên cơ", "Đ", "Đ", "H", "M", "M", "V", "Đ", "Đ", "V", "M", "M",
             "H"],
+        # [TLCT 2026-07-03] Bản gốc THIẾU Thiên phủ (chính tinh!). Điền theo
+        # QUAN SÁT golden charts xem-tuvi.com (6 lá): Sửu=B, Dần=M, Mùi=Đ,
+        # Hợi=Đ. (Bảng prose trong skill 14-chinh-tinh.md MÂU THUẪN với
+        # xem-tuvi ở Sửu/Dần/Mùi -> theo xem-tuvi vì đó là chuẩn hiệu chỉnh
+        # engine.) Vị trí chưa quan sát để None, bổ sung khi có lá mẫu.
+        7: ["Thiên phủ", None, "B", "M", None, None, None, None, "Đ", None,
+            None, None, "Đ"],
         8: ["Thái âm", "V", "Đ", "H", "H", "H", "H", "H", "Đ", "V", "M",
             "M", "M"],
         9: ["Tham lang", "H", "M", "Đ", "H", "V", "H", "H", "M", "Đ", "H",
@@ -242,9 +253,28 @@ def dacTinhSao(viTriDiaBan, sao):
              "Đ"],
         95: ["Hóa kỵ", None, "Đ", None, None, "Đ", None, None, "Đ", None, None,
              "Đ", None],
-        36: ["Đại hao", None, None, "Đ", "Đ", None, None, None, None, "Đ", "Đ",
-             None, None],
-        30: ["Tiểu Hao", None, None, "Đ", "Đ", None, None, None, None, "Đ",
+        # [TLCT 2026-07-03] Mở rộng Đại/Tiểu hao + thêm các sao vòng Thái Tuế/
+        # Lộc Tồn/đôi theo QUAN SÁT 6 golden charts xem-tuvi.com. Ô chưa có
+        # bằng chứng = None (không suy diễn).
+        36: ["Đại hao", None, None, "Đ", "Đ", None, None, "H", None, "Đ", "Đ",
+             None, "Đ"],
+        30: ["Tiểu Hao", "H", None, "Đ", "Đ", None, "H", None, None, "Đ",
+             "Đ", None, None],
+        16: ["Thiếu dương", None, "H", None, "Đ", None, None, "Đ", None, None,
+             None, "H", "H"],
+        17: ["Tang môn", "H", None, "Đ", None, "H", None, None, "H", None,
+             None, None, "H"],
+        18: ["Thiếu âm", "Đ", "H", None, "H", None, "H", None, None, "Đ",
+             None, None, None],
+        23: ["Bạch hổ", None, "H", None, None, None, "H", "H", None, "Đ",
+             None, "H", None],
+        29: ["Thanh long", None, "Đ", None, "H", None, None, "H", None, None,
+             None, "Đ", None],
+        79: ["Hồng loan", None, None, None, "Đ", None, None, "Đ", None, None,
+             None, None, None],
+        78: ["Đào hoa", None, None, None, "Đ", None, None, None, None, None,
+             None, None, None],
+        63: ["Long trì", None, None, None, None, None, None, None, None, None,
              "Đ", None, None],
         69: ["Thiên khốc", "Đ", "Đ", None, "Đ", None, None, "Đ", "Đ", None,
              "Đ", None, None],
@@ -252,12 +282,22 @@ def dacTinhSao(viTriDiaBan, sao):
              None, None],
         98: ["Thiên mã", None, None, "Đ", None, None, "Đ", None, None, None,
              None, None, None],
-        73: ["Thiên Hình", None, None, "Đ", "Đ", None, None, None, None, "Đ",
-             "Đ", None, None],
+        # [TLCT 2026-07-03] Thiên hình: bản gốc chỉ đánh dấu Đắc (Dần Mão Thân
+        # Dậu), bỏ trống chỗ khác. Chuẩn phổ thông + xem-tuvi.com: các cung
+        # còn lại là Hãm (sát tinh, vd Thiên hình (H) tại Tỵ trong lá số mẫu).
+        73: ["Thiên Hình", "H", "H", "Đ", "Đ", "H", "H", "H", "H", "Đ",
+             "Đ", "H", "H"],
         74: ["Thiên riêu", None, None, "Đ", "Đ", None, None, None, None, None,
              "Đ", "Đ", None],
 
     }
+    # [TLCT 2026-10-11] Gán rõ ràng None khi sao không có đắc hãm tại cung
+    # để bảo đảm trạng thái luôn được định nghĩa chính xác.
     if sao.saoID in maTranDacTinh.keys():
-        if maTranDacTinh[sao.saoID][viTriDiaBan] in ["M", "V", "Đ", "B", "H"]:
-            sao.anDacTinh(maTranDacTinh[sao.saoID][viTriDiaBan])
+        dt = maTranDacTinh[sao.saoID][viTriDiaBan]
+        if dt in ["M", "V", "Đ", "B", "H"]:
+            sao.anDacTinh(dt)
+        else:
+            sao.saoDacTinh = None
+    else:
+        sao.saoDacTinh = None

@@ -39,10 +39,19 @@ class lapThienBan(object):
         self.canThang, self.canNam, self.chiNam = \
             ngayThangNamCanChi(self.ngayAm, self.thangAm,
                                self.namAm, False, self.timeZone)
-        self.chiThang = self.thangAm
+        # [TLCT 2026-08-03] Bản gốc gán thẳng self.thangAm (1-12) làm index
+        # vào diaChi (1=Tý,2=Sửu,3=Dần...) — SAI, coi tháng 1 âm lịch là Tý.
+        # Chi tháng phải theo "kiến nguyệt" (tháng Giêng luôn là Dần), khớp
+        # công thức đã dùng đúng ở run_bazi/_tinh_truc trong engine.py:
+        # chi_thang_idx(0-based, Tý=0) = (thangAm+1) % 12 → quy sang index
+        # 1-based của diaChi (Tý=1) là +1. Verify: mùng 1 Tết Giáp Thìn
+        # 2024-02-10 và Ất Tỵ 2025-01-29 khớp "Bính Dần"/"Mậu Dần" (2 nguồn
+        # độc lập: thitruongtaichinhtiente.vn, sites.google.com/site/
+        # huynhhieunghia0206), thay vì "...Tý" như bản gốc.
+        self.chiThang = ((self.thangAm + 1) % 12) + 1
         self.canThangTen = thienCan[self.canThang]['tenCan']
         self.canNamTen = thienCan[self.canNam]['tenCan']
-        self.chiThangTen = diaChi[self.thangAm]['tenChi']
+        self.chiThangTen = diaChi[self.chiThang]['tenChi']
         self.chiNamTen = diaChi[self.chiNam]['tenChi']
 
         self.canNgay, self.chiNgay = canChiNgay(
@@ -62,8 +71,13 @@ class lapThienBan(object):
         self.hanhCuc = nguHanh(cuc)['id']
         self.tenCuc = nguHanh(cuc)['tenCuc']
 
-        self.menhChu = diaChi[self.canNam]['menhChu']
-        self.thanChu = diaChi[self.canNam]['thanChu']
+        # [TLCT 2026-07-03] Bản gốc tra diaChi[canNam] — SAI: can (1-10) index
+        # vào bảng địa chi (1-12). Mệnh chủ/Thân chủ an theo CHI năm sinh.
+        # TODO đối chiếu: xem-tuvi.com hiện "Chủ Mệnh Văn xương" cho năm Dậu
+        # (bảng phổ thông = Văn khúc) — vùng "3 thuyết" mơ hồ, cần thêm lá số
+        # mẫu để chốt; tạm theo bảng phổ thông (Tham-Cự-Lộc-Văn-Liêm-Vũ-Phá).
+        self.menhChu = diaChi[self.chiNam]['menhChu']
+        self.thanChu = diaChi[self.chiNam]['thanChu']
 
         self.menh = nguHanhNapAm(self.chiNam, self.canNam)
         menhId = nguHanh(self.menh)['id']

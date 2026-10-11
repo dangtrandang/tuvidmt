@@ -116,12 +116,17 @@ diaChi = [
         "tenHanh": ":D",
         "amDuong": 0
     },
+    # [TLCT 2026-07-03] Hiệu chỉnh bảng menhChu/thanChu theo golden charts
+    # xem-tuvi.com (6 lá số): thân chủ tuổi Tý = HỎA TINH (2 lá xác nhận,
+    # bản gốc ghi Linh tinh) -> Ngọ đổi thành Linh tinh (đối xứng, chưa có
+    # lá mẫu tuổi Ngọ); mệnh chủ Mão/Dậu = VĂN XƯƠNG (lá Quý Dậu xác nhận,
+    # khẩu quyết "Tham Cự Lộc VĂN Liêm Vũ Phá" giải chữ Văn = Văn Xương).
     {
         "id": 1,
         "tenChi": "Tý",
         "tenHanh": "T",
         "menhChu": "Tham lang",
-        "thanChu": "Linh tinh",
+        "thanChu": "Hỏa tinh",
         "amDuong": 1
     },
     {
@@ -144,7 +149,7 @@ diaChi = [
         "id": 4,
         "tenChi": "Mão",
         "tenHanh": "M",
-        "menhChu": "Văn khúc",
+        "menhChu": "Văn xương",
         "thanChu": "Thiên đồng",
         "amDuong": -1
     },
@@ -169,7 +174,7 @@ diaChi = [
         "tenChi": "Ngọ",
         "tenHanh": "H",
         "menhChu": "Phá quân",
-        "thanChu": "Hỏa tinh",
+        "thanChu": "Linh tinh",
         "amDuong": 1
     },
     {
@@ -192,7 +197,7 @@ diaChi = [
         "id": 10,
         "tenChi": "Dậu",
         "tenHanh": "K",
-        "menhChu": "Văn khúc",
+        "menhChu": "Văn xương",
         "thanChu": "Thiên đồng",
         "amDuong": -1
     },
@@ -429,13 +434,13 @@ def dichCung(cungBanDau, *args):
     cungSauKhiDich = int(cungBanDau)
     for soCungDich in args:
         cungSauKhiDich += int(soCungDich)
-    if cungSauKhiDich % 12 is 0:
+    if cungSauKhiDich % 12 == 0:  # [TLCT] is->== (SyntaxWarning)
         return 12
     return cungSauKhiDich % 12
 
 
 def khoangCachCung(cung1, cung2, chieu=1):
-    if chieu is 1:  # Con trai, chiều dương
+    if chieu == 1:  # [TLCT] is->==  # Con trai, chiều dương
         return (cung1 - cung2 + 12) % 12
     else:
         return (cung2 - cung1 + 12) % 12
@@ -444,7 +449,7 @@ def khoangCachCung(cung1, cung2, chieu=1):
 def timCuc(viTriCungMenhTrenDiaBan, canNamSinh):
     canThangGieng = (canNamSinh * 2 + 1) % 10
     canThangMenh = ((viTriCungMenhTrenDiaBan - 3) % 12 + canThangGieng) % 10
-    if canThangMenh is 0:
+    if canThangMenh == 0:  # [TLCT] is->==
         canThangMenh = 10
     return nguHanhNapAm(viTriCungMenhTrenDiaBan, canThangMenh)
 
@@ -470,7 +475,7 @@ def timTuVi(cuc, ngaySinhAmLich):
         cuc += cucBanDau
         cungDan += 1  # Dịch vị trí cung Dần
     saiLech = cuc - ngaySinhAmLich
-    if saiLech % 2 is 1:
+    if saiLech % 2 == 1:  # [TLCT] is->==
         saiLech = -saiLech  # Nếu sai lệch là chẵn thì tiến, lẻ thì lùi
     return dichCung(cungDan, saiLech)
 
@@ -512,8 +517,11 @@ def timHoaLinh(chiNamSinh, gioSinh, gioiTinh, amDuongNamSinh):
         khoiCungHoaTinh = 3
         khoiCungLinhTinh = 11
     elif chiNamSinh in [6, 10, 2]:
-        khoiCungHoaTinh = 11
-        khoiCungLinhTinh = 4
+        # [TLCT 2026-07-03] Bản gốc đảo khởi cung Hỏa<->Linh cho nhóm
+        # Tỵ-Dậu-Sửu. Chuẩn Thái Thứ Lang (khớp xem-tuvi.com): Hỏa khởi Mão(4),
+        # Linh khởi Tuất(11). 3 nhóm còn lại bản gốc đúng.
+        khoiCungHoaTinh = 4
+        khoiCungLinhTinh = 11
     elif chiNamSinh in [12, 4, 8]:
         khoiCungHoaTinh = 10
         khoiCungLinhTinh = 11
@@ -532,7 +540,11 @@ def timHoaLinh(chiNamSinh, gioSinh, gioiTinh, amDuongNamSinh):
 
 
 def timThienKhoi(canNam):
-    khoiViet = [None, 2, 1, 12, 10, 8, 1, 8, 7, 6, 4]
+    # [TLCT 2026-07-03] Sửa 3 can theo khẩu quyết "Giáp Mậu Canh... " bản
+    # xem-tuvi dùng (golden charts xác nhận): Mậu 8->2 (Sửu, lá Mậu Tí 2008),
+    # Canh 8->7 (Ngọ, lá Canh Tuất 1970), Nhâm 6->4 (Mão, lá Nhâm Dần 2022).
+    # Đinh(10) chưa có lá mẫu — giữ nguyên, cần kiểm khi có data.
+    khoiViet = [None, 2, 1, 12, 10, 2, 1, 7, 7, 4, 4]
     try:
         return khoiViet[canNam]
     except:
@@ -581,11 +593,14 @@ def timThienMa(chiNam):
 
 
 def timPhaToai(chiNam):
+    # [TLCT 2026-07-03] Bản gốc đảo 2 nhóm. Chuẩn (khớp xem-tuvi.com):
+    # Tý-Ngọ-Mão-Dậu (chi%3==1) -> Tỵ(6); Dần-Thân-Tỵ-Hợi (chi%3==0) -> Dậu(10);
+    # Thìn-Tuất-Sửu-Mùi (chi%3==2) -> Sửu(2).
     demNghich = chiNam % 3
     if demNghich == 0:
-        return 6
-    elif demNghich == 1:
         return 10
+    elif demNghich == 1:
+        return 6
     elif demNghich == 2:
         return 2
     else:

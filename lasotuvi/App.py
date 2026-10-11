@@ -220,10 +220,13 @@ def lapDiaBan(diaBan, nn, tt, nnnn, gioSinh, gioiTinh, duongLich, timeZone):
     viTriTuyet = dichCung(viTriTrangSinh, amDuongNamNu * 9)
     diaBan.nhapSao(viTriTuyet, saoTuyet)
 
-    viTriThai = dichCung(viTriTrangSinh, amDuongNamNu * (-1))
+    # [TLCT 2026-07-03] Bản gốc đảo Thai<->Dưỡng. Thứ tự vòng Tràng sinh:
+    # ...Tuyệt(+9), Thai(+10), Dưỡng(+11) theo chiều an => Thai lùi 2 cung,
+    # Dưỡng lùi 1 cung. Đối chiếu lá số chuẩn xem-tuvi.com: Thai Thìn, Dưỡng Mão.
+    viTriThai = dichCung(viTriTrangSinh, amDuongNamNu * (-2))
     diaBan.nhapSao(viTriThai, saoThai)
 
-    viTriDuong = dichCung(viTriTrangSinh, amDuongNamNu * (-2))
+    viTriDuong = dichCung(viTriTrangSinh, amDuongNamNu * (-1))
     diaBan.nhapSao(viTriDuong, saoDuong)
 
     # An sao đôi
@@ -335,10 +338,17 @@ def lapDiaBan(diaBan, nn, tt, nnnn, gioSinh, gioiTinh, duongLich, timeZone):
     viTriQuaTu = dichCung(viTriCoThan, -4)
     diaBan.nhapSao(viTriQuaTu, saoQuaTu)
 
-    viTriVanTinh = dichCung(viTriKinhDuong, 2)
+    # [TLCT 2026-07-03] Văn tinh đổi từ công thức Kình dương+2 sang BẢNG theo
+    # can năm. Bảng chuẩn (= Kình+2): Giáp Tỵ, Ất Ngọ, Bính/Mậu Thân, Đinh/Kỷ
+    # Dậu, Canh Hợi, Tân Tý, Nhâm Dần, Quý Mão — NHƯNG golden chart xem-tuvi
+    # (lá Nhâm Dần 18/8/2022) đặt Nhâm ở DẬU (dị biệt duy nhất, 5 can còn lại
+    # quan sát được đều khớp công thức). Theo xem-tuvi: Nhâm -> 10.
+    # Đường phù tách khỏi Văn tinh (= Kình+4, khớp cả 6 golden charts).
+    maTranVanTinh = [None, 6, 7, 9, 10, 9, 10, 12, 1, 10, 4]
+    viTriVanTinh = maTranVanTinh[canNam]
     diaBan.nhapSao(viTriVanTinh, saoVanTinh)
 
-    viTriDuongPhu = dichCung(viTriVanTinh, 2)
+    viTriDuongPhu = dichCung(viTriKinhDuong, 4)
     diaBan.nhapSao(viTriDuongPhu, saoDuongPhu)
 
     viTriQuocAn = dichCung(viTriDuongPhu, 3)
@@ -355,7 +365,9 @@ def lapDiaBan(diaBan, nn, tt, nnnn, gioSinh, gioiTinh, duongLich, timeZone):
     #    Theo cụ Thiên Lương: Lấy cung Thân làm tháng Giêng, đếm thuận nhưng
     #    nhảy cung là Thiên giải. Một số trang web đếm nhưng không nhảy cung???
     #    Liệu phương cách nào đúng?
-    viTriThienGiai = dichCung(9, (2 * tt) - 2)
+    # [TLCT 2026-07-03] Bản gốc đếm NHẢY cung (2*tt-2), tác giả tự ghi "???".
+    # Chuẩn khớp xem-tuvi.com: cung Thân làm tháng Giêng, đếm THUẬN KHÔNG nhảy.
+    viTriThienGiai = dichCung(9, tt - 1)
     diaBan.nhapSao(viTriThienGiai, saoThienGiai)
 
     viTriDiaGiai = dichCung(viTriTaPhu, 3)
@@ -440,9 +452,12 @@ def lapDiaBan(diaBan, nn, tt, nnnn, gioSinh, gioiTinh, duongLich, timeZone):
         viTriHoaKhoa = viTriVanKhuc
         viTriHoaKy = viTriVanXuong
     elif canNam == 9:
+        # [TLCT 2026-07-03] Can Nhâm "Lương Tử PHỦ Vũ" có 2 thuyết cho chữ
+        # "Phủ": Thiên Phủ (bản gốc) vs TẢ PHÙ. Chuẩn xem-tuvi.com (golden
+        # lá Nhâm Dần 18/8/2022): Hóa Khoa đi với TẢ PHÙ.
         viTriHoaLoc = viTriThienLuong
         viTriHoaQuyen = viTriTuVi
-        viTriHoaKhoa = viTriThienPhu
+        viTriHoaKhoa = viTriTaPhu
         viTriHoaKy = viTriVuKhuc
     elif canNam == 10:
         viTriHoaLoc = viTriPhaQuan
